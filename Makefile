@@ -8,4 +8,4 @@ format:
 	uv run ruff format
 
 test:
-	uv run PYTHONPATH=. pytest
+	uv run -m pytest
