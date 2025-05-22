@@ -32,3 +32,6 @@ jobs:
 
       - name: 🎨 Format check (ruff format)
         run: uv run ruff format . --check
+
+      - name: 💻 Test check (pytest)
+        run: uv run pytest
