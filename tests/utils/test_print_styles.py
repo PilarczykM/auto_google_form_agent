@@ -8,7 +8,7 @@ def test_print_success_output(capsys):
     captured = capsys.readouterr().out
     assert "✔ Test Label:" in captured
     assert "Test Value" in captured
-    assert re.search(r"\[\d{2}:\d{2}:\d{2}\]", captured)  # Matches time like [14:32:10]
+    assert re.search(r"\[\d{2}:\d{2}:\d{2}\]", captured)
 
 
 def test_print_info_output(capsys):
