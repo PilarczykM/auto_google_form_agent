@@ -16,3 +16,43 @@ dependencies = [
 dev = [
     "ruff>=0.11.10",
 ]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 120
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "lf"
+docstring-code-format = true
+docstring-code-line-length = 120
+
+[tool.ruff.lint]
+select = [
+  "E",    # pycodestyle
+  "F",    # pyflakes
+  "I",    # isort
+  "UP",   # pyupgrade
+  "B",    # flake8-bugbear
+  "C90",  # mccabe complexity
+  "N",    # pep8-naming
+  "SIM",  # simplify
+  "RUF",  # ruff-specific
+  "D",    # pydocstyle
+  "PL",   # pylint-like rules
+  "TRY",  # try/except best practices
+]
+
+ignore = [
+  "D100",  # Missing docstring in public module
+  "D104",  # Missing docstring in public package
+  "D107",  # Missing docstring in __init__
+  "D203",  # Conflicts with D211
+  "D213",  # Conflicts with D212
+]
+
+[tool.ruff.lint.isort]
+force-single-line = false
+known-first-party = ["app"]
+combine-as-imports = true
