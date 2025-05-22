@@ -11,3 +11,8 @@ dependencies = [
     "playwright>=1.52.0",
     "rich>=13.9.4",
 ]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.11.10",
+]
