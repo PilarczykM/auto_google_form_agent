@@ -1,5 +1,5 @@
 [project]
-name = "autogforms-agent"
+name = "autogforms_agent"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
