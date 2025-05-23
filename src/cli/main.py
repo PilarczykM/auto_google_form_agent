@@ -1,5 +1,7 @@
 import click
 
+from parsers.google_form_parser import extract_google_form
+from utils.fs_utils import reset_screenshot_dir
 from utils.print_styles import print_header, print_success
 
 
@@ -32,6 +34,11 @@ def main(lang, personality, form_url, enforce_quality_check):
     print_success("Personality Traits", personality)
     print_success("Form URL", form_url)
     print_success("Quality Check Enabled", str(enforce_quality_check))
+
+    reset_screenshot_dir()
+
+    questions = extract_google_form(form_url)
+    print(questions)
 
 
 if __name__ == "__main__":
