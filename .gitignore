@@ -172,6 +172,7 @@ cython_debug/
 
 # local files
 .DS_Store
+screenshots
 
 # VSCode
 .vscode/*
