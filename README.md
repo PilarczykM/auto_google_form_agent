@@ -71,3 +71,37 @@ python main.py \
 
 ---
 
+## 🚧 TODO — Remaining Features
+
+### ✅ Completed
+- [x] CLI interface: language, personality, form URL, quality check flag  
+- [x] Question extraction using Playwright  
+- [x] Per-question screenshots  
+- [x] File name sanitization utility (`sanitize_filename`)  
+- [x] Screenshot directory management with cleanup (`reset_screenshot_dir`)  
+
+---
+
+### 🛠️ In Progress / Next Steps
+
+#### 🧠 FormAgent
+- [ ] Design `FormAgent` class:
+  - [ ] Accept `lang` and `personality` traits
+  - [ ] Method: `generate_answers(questions) -> dict[question_text, answer]`
+- [ ] Generate responses based on question text (and optionally screenshots)
+
+#### 🧪 SupervisorAgent
+- [ ] Implement `SupervisorAgent.review(questions, answers)`:
+  - [ ] Score responses (0–10)
+  - [ ] Add feedback/comments
+  - [ ] Optionally revise weak responses
+  - [ ] Return `final_answers` dictionary
+
+#### ✍️ FormFiller
+- [ ] Reuse existing Playwright session (same `page`)
+- [ ] Implement `fill_form(page, final_answers)`
+  - [ ] Locate each question by text
+  - [ ] Match answer and inject into appropriate input
+  - [ ] Handle multiple-choice, text fields, linear scales
+- [ ] Handle form sections (`Next`, `Back`, etc.)
+- [ ] Submit form if applicable
