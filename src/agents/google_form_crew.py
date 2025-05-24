@@ -17,6 +17,27 @@ def _load_prompts(language: str) -> dict:
 
 
 def create_form_crew(question: str, traits: list[str], language: str) -> Crew:
+    """Create a Crew instance configured to generate a form-based response based on a question and traits.
+
+    This function initializes an agent with a specific role, goal, and backstory derived from 
+    language-specific prompts. It also defines a task for the agent to perform, and returns a 
+    Crew instance composed of the agent and task.
+
+    Parameters
+    ----------
+    question : str
+        The main question to be addressed by the crew.
+    traits : list of str
+        A list of traits or attributes to be considered in the form creation.
+    language : str
+        The language code to determine which prompt templates to use.
+
+    Returns
+    -------
+    Crew
+        An instance of the `Crew` class containing the configured agent and task.
+
+    """
     prompts = _load_prompts(language)
     inputs = {"question": question, "traits": ", ".join(traits), "language": language}
 
