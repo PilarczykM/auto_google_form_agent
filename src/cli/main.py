@@ -1,5 +1,6 @@
 import click
 
+from agents.google_form_crew import create_form_crew
 from parsers.google_form_parser import extract_google_form
 from utils.fs_utils import reset_screenshot_dir
 from utils.print_styles import print_header, print_success
@@ -39,6 +40,16 @@ def main(lang, personality, form_url, enforce_quality_check):
 
     questions = extract_google_form(form_url)
     print(questions)
+
+    question = "Co motywuje Cię do pracy?"
+    traits = ["casual", "honest"]
+    language = "pl"
+
+    crew = create_form_crew(question, traits, language)
+    result = crew.kickoff()
+
+    print("Generated Answer:")
+    print(result)
 
 
 if __name__ == "__main__":
