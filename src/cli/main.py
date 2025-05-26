@@ -1,6 +1,6 @@
 import click
 
-from agents.google_form_crew import create_form_crew
+from agents.google_form_crew import create_bio_generator_crew, create_form_crew
 from parsers.google_form_parser import extract_google_form
 from utils.fs_utils import reset_screenshot_dir
 from utils.print_styles import print_header, print_success
@@ -38,14 +38,16 @@ def main(lang, personality, form_url, enforce_quality_check):
 
     reset_screenshot_dir()
 
-    questions = extract_google_form(form_url)
-    print(questions)
+    # questions = extract_google_form(form_url)
+    # print(questions)
 
-    question = "Co motywuje Cię do pracy?"
-    traits = ["casual", "honest"]
+    question = "Kim jesteś? Kobieta czy męzczyzna."
     language = "pl"
 
-    crew = create_form_crew(question, traits, language)
+    crew = create_bio_generator_crew(language)
+    bio = crew.kickoff()
+
+    crew = create_form_crew(question, bio, language)
     result = crew.kickoff()
 
     print("Generated Answer:")
