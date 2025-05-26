@@ -38,8 +38,8 @@ def main(lang, personality, form_url, enforce_quality_check):
 
     reset_screenshot_dir()
 
-    # questions = extract_google_form(form_url)
-    # print(questions)
+    questions = extract_google_form(form_url)
+    print(questions)
 
     question = "Kim jesteś? Kobieta czy męzczyzna."
     language = "pl"
