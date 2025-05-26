@@ -59,6 +59,25 @@ def create_form_crew(question: str, bio: str, language: str) -> Crew:
 
 
 def create_bio_generator_crew(language: str) -> Crew:
+    """Create a Crew instance that generates a fictional IT professional's biography.
+
+    This function sets up a CrewAI agent and task designed to generate a short, structured biography
+    of an IT professional. The biography includes traits such as age, gender, specialization,
+    years of experience, key technologies, and communication style. The agent's behavior and prompts
+    are dynamically loaded based on the specified language.
+
+    Parameters
+    ----------
+    language : str
+        Language code (e.g., "en", "pl") determining the prompt language and output language of the biography.
+
+    Returns
+    -------
+    Crew
+        A Crew instance with one agent (`bio_generator_agent`) and one task (`bio_generation_task`)
+        responsible for generating a single, personality-rich IT biography.
+
+    """
     prompts = _load_prompts(language)
 
     bio_generator_agent = Agent(
