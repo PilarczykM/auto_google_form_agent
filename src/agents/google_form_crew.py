@@ -16,7 +16,7 @@ def _load_prompts(language: str) -> dict:
         return yaml.safe_load(f)
 
 
-def create_form_crew(question: str, bio: str, language: str) -> Crew:
+def create_form_crew(language: str) -> Crew:
     """Create a Crew instance configured to generate a form-based response based on a question and traits.
 
     This function initializes an agent with a specific role, goal, and backstory derived from
@@ -39,18 +39,17 @@ def create_form_crew(question: str, bio: str, language: str) -> Crew:
 
     """
     prompts = _load_prompts(language)
-    inputs = {"question": question, "bio": bio}
 
     form_agent = Agent(
         role=prompts["form_agent"]["role"],
-        goal=prompts["form_agent"]["goal"].format(**inputs),
-        backstory=prompts["form_agent"]["backstory"].format(**inputs),
+        goal=prompts["form_agent"]["goal"],
+        backstory=prompts["form_agent"]["backstory"],
         allow_delegation=False,
         verbose=True,
     )
 
     answer_task = Task(
-        description=prompts["form_response_task"]["description"].format(**inputs),
+        description=prompts["form_response_task"]["description"],
         expected_output=prompts["form_response_task"]["expected_output"],
         agent=form_agent,
     )
