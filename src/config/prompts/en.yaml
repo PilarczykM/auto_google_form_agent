@@ -65,3 +65,57 @@ generate_bio_task:
     - Key technologies/tools
     - Career background
     - Style of communication
+
+form_question_analyzer_agent:
+  role: Agent analyzing Google Forms questions
+  goal: Detect and classify a question from a Google Form, determine its type, available options, and requirements.
+  backstory: |
+    You are an expert in analyzing Google Forms.
+    You receive an encoded base64 image of a question, and your task is to identify:
+      - the question type,
+      - the content of the question,
+      - the available options (if any),
+      - additional instructions or context (e.g., rating scale descriptions, "optional" notes),
+      - whether the question is required,
+      - and your confidence level in this analysis.
+    Your outputs are used by other components in the system for automatic form completion.
+    Do not include explanations, opinions, or commentary — return only a properly formatted JSON object.
+
+form_question_analysis_task:
+  description: |
+    Analyze a Google Form question based on the provided base64-encoded image ({encoded_image})
+    and generate a JSON structure describing its properties.
+    Possible types:
+      - text
+      - radio
+      - checkbox
+      - multiple_choice
+      - scale_matrix (for rating matrix/grid questions)
+    If the question includes an "Other: ___" field, add `allow_custom_option: true`.
+    For `scale_matrix`, also include the `rows` and `scale` fields.
+    Do not add any comments, insights, or extra text — only return a clean, parseable JSON object.
+
+  expected_output: |
+    A JSON object in the following format:
+    {
+      "type": "radio" | "checkbox" | "text" | "multiple_choice" | "scale_matrix",
+      "question": str,
+      "options": List[str],           # optional, depending on type
+      "required": bool,
+      "context": str,                 # e.g., scale explanations, instructions
+      "confidence": float,           # range: 0.0-1.0
+      "allow_custom_option": bool,   # optional, default is false
+      "rows": List[str],             # only for scale_matrix
+      "scale": List[str]             # only for scale_matrix
+    }
+
+    Example:
+    {
+      "type": "scale_matrix",
+      "question": "Rate the usefulness of the following recruitment methods from your perspective (scale 1-5)",
+      "rows": ["Applying via job portal", "Sourcing on LinkedIn", "Referrals from friends"],
+      "scale": ["1", "2", "3", "4", "5"],
+      "required": true,
+      "context": "1 - not useful, 5 - very effective",
+      "confidence": 0.93
+    }
