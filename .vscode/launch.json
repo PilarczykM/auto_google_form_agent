@@ -13,8 +13,6 @@
             "args": [
                 "--lang",
                 "pl",
-                "--personality",
-                "'kind'",
                 "--form-url",
                 "https://docs.google.com/forms/d/e/1FAIpQLScB4awl8urEhxrvWgynKOryRzA2_C-8DXMcrZvbbNcuCk3Kgw/viewform"
             ]
