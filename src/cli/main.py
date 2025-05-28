@@ -47,8 +47,8 @@ def main(lang, personality, form_url, enforce_quality_check):
     crew = create_bio_generator_crew(language)
     bio = crew.kickoff()
 
-    crew = create_form_crew(question, bio, language)
-    result = crew.kickoff()
+    crew = create_form_crew(language)
+    result = crew.kickoff(inputs={"question": question, "bio": str(bio)})
 
     print("Generated Answer:")
     print(result)
