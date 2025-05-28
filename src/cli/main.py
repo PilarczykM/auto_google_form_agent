@@ -49,7 +49,7 @@ def main(lang, form_url, enforce_quality_check):
     result = crew.kickoff(inputs={"question": question, "bio": str(bio)})
 
     print("Generated Answer:")
-    print(result) 
+    print(result)
 
 
 if __name__ == "__main__":

@@ -25,10 +25,6 @@ def create_form_crew(language: str) -> Crew:
 
     Parameters
     ----------
-    question : str
-        The main question to be addressed by the crew.
-    bio : str
-        The biography.
     language : str
         The language code to determine which prompt templates to use.
 
