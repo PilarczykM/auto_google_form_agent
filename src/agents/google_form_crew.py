@@ -94,3 +94,40 @@ def create_bio_generator_crew(language: str) -> Crew:
     )
 
     return Crew(agents=[bio_generator_agent], tasks=[bio_generation_task], verbose=True)
+
+
+def create_form_question_analyzer_crew(language: str) -> Crew:
+    """Create a Crew instance that analyzes a form question and generates a response.
+
+    This function sets up a CrewAI agent and task designed to analyze a form question and generate a response.
+    The agent's behavior and prompts are dynamically loaded based on the specified language.
+
+    Parameters
+    ----------
+    language : str
+        Language code (e.g., "en", "pl") determining the prompt language and output language of the response.
+
+    Returns
+    -------
+    Crew
+        A Crew instance with one agent (`form_question_analyzer_agent`) and one task (`form_question_analysis_task`)
+        responsible for analyzing a form question and generating a response.
+
+    """
+    prompts = _load_prompts(language)
+
+    form_question_analyzer_agent = Agent(
+        role=prompts["form_question_analyzer_agent"]["role"],
+        goal=prompts["form_question_analyzer_agent"]["goal"],
+        backstory=prompts["form_question_analyzer_agent"]["backstory"],
+        allow_delegation=False,
+        verbose=True,
+    )
+
+    form_question_analysis_task = Task(
+        description=prompts["form_question_analysis_task"]["description"],
+        expected_output=prompts["form_question_analysis_task"]["expected_output"],
+        agent=form_question_analyzer_agent,
+    )
+
+    return Crew(agents=[form_question_analyzer_agent], tasks=[form_question_analysis_task], verbose=True)

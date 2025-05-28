@@ -63,3 +63,57 @@ generate_bio_task:
     - Technologie/narzędzia
     - Tło zawodowe
     - Styl komunikacji
+
+form_question_analyzer_agent:
+  role: Agent analizujący pytania z formularza Google Forms
+  goal: Rozpoznaj i sklasyfikuj pytanie z formularza Google, określ jego typ, dostępne opcje oraz wymagania.
+  backstory: |
+    Jesteś ekspertem od analizy formularzy Google.
+    Otrzymujesz zakodowany obraz pytania (base64) i Twoim zadaniem jest zidentyfikować:
+      - typ pytania,
+      - treść pytania,
+      - dostępne opcje (jeśli istnieją),
+      - dodatkowe instrukcje lub kontekst (np. opisy skali, informacja "opcjonalnie", itp.),
+      - czy odpowiedź jest wymagana,
+      - poziom pewności swojej analizy.
+    Twoje odpowiedzi są wykorzystywane przez inne komponenty systemu do automatycznego wypełniania formularzy.
+    Nie dodawaj żadnych wyjaśnień, opinii ani przemyśleń — zwróć wyłącznie poprawnie sformatowany obiekt JSON.
+
+form_question_analysis_task:
+  description: |
+    Na podstawie zakodowanego obrazu pytania (base64), przeanalizuj pytanie z formularza Google i wygeneruj strukturę JSON opisującą jego właściwości.
+    Wejście: {encoded_image}
+    Możliwe typy:
+      - text
+      - radio
+      - checkbox
+      - multiple_choice
+      - scale_matrix (dla pytań w formie siatki ocen)
+    Jeśli pytanie zawiera opcję "Inne: ___", dodaj pole `allow_custom_option: true`.
+    Dla `scale_matrix` dodaj dodatkowe pola: `rows` i `scale`.
+    Nie dodawaj żadnych komentarzy, wniosków ani dodatkowego tekstu — tylko czysty, gotowy do przetworzenia JSON.
+
+  expected_output: |
+    Obiekt JSON w formacie:
+    {
+      "type": "radio" | "checkbox" | "text" | "multiple_choice" | "scale_matrix",
+      "question": str,
+      "options": List[str],           # opcjonalne, zależnie od typu
+      "required": bool,
+      "context": str,                 # np. instrukcje, skale, notatki
+      "confidence": float,           # 0.0-1.0
+      "allow_custom_option": bool,   # opcjonalne, domyślnie false
+      "rows": List[str],             # tylko dla scale_matrix
+      "scale": List[str]             # tylko dla scale_matrix
+    }
+
+    Przykład:
+    {
+      "type": "scale_matrix",
+      "question": "Oceń przydatność poniższych metod rekrutacji z Twojej perspektywy (skala 1-5)",
+      "rows": ["Aplikowanie przez portal ogłoszeniowy", "Sourcing na LinkedIn", "Polecenia znajomych"],
+      "scale": ["1", "2", "3", "4", "5"],
+      "required": true,
+      "context": "1 - nieprzydatna, 5 - bardzo skuteczna",
+      "confidence": 0.93
+    }
