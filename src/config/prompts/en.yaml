@@ -81,39 +81,71 @@ form_question_analyzer_agent:
     Your outputs are used by other components in the system for automatic form completion.
     Do not include explanations, opinions, or commentary — return only a properly formatted JSON object.
 
+form_question_analyzer_agent:
+  role: Google Forms Question Analyzer Agent
+  goal: Detect and classify Google Forms questions from screenshots by identifying their type, structure, and metadata.
+  backstory: |
+    You are an expert in analyzing Google Forms structures.
+    Your job is to inspect screenshots of individual form questions (provided as base64-encoded images) and return structured JSON representations of their content.
+
+    For each question, you must determine:
+      - the type of question (e.g., radio, checkbox, scale_matrix, etc.),
+      - the full question text (including optional hints),
+      - all selectable options, if applicable,
+      - whether the question is required (based on the red asterisk *),
+      - additional context or instructions (e.g., scale descriptions),
+      - the confidence of your analysis (a float between 0.0 and 1.0),
+      - any custom options (e.g., "Other: ___"),
+      - specific fields for matrix-style questions or linear scales.
+
+    Your output will be used to automatically fill out Google Forms — it must be precise, cleanly structured, and fully machine-readable.
+
+    Do not include explanations, commentary, or any extra text — only valid JSON is allowed.
+
 form_question_analysis_task:
   description: |
-    Analyze a Google Form question based on the provided base64-encoded image ({encoded_image})
-    and generate a JSON structure describing its properties.
-    Possible types:
-      - text
-      - radio
-      - checkbox
-      - multiple_choice
-      - scale_matrix (for rating matrix/grid questions)
-    If the question includes an "Other: ___" field, add `allow_custom_option: true`.
-    For `scale_matrix`, also include the `rows` and `scale` fields.
-    Do not add any comments, insights, or extra text — only return a clean, parseable JSON object.
+    Analyze a base64-encoded screenshot of a Google Forms question and return a JSON object that describes its structure.
+
+    Supported question types:
+      - text (short or paragraph answers),
+      - radio (single choice),
+      - checkbox (multiple choice),
+      - multiple_choice (same as radio),
+      - linear_scale (horizontal 1-5 or 1-10 scale),
+      - scale_matrix (multi-row grid rating with shared scale).
+
+    If the question includes "Other: ___", set `allow_custom_option: true`.
+
+    For `scale_matrix` questions, include:
+      - `rows`: list of row labels,
+      - `scale`: list of scale values (e.g., ["1", "2", "3", "4", "5"]).
+
+    For `linear_scale` questions, include:
+      - `scale`: list of scale values.
+
+    Use `required: true` if the question has a red asterisk (*).
+
+    Return only a valid JSON object — no comments, no free-form explanations.
 
   expected_output: |
-    A JSON object in the following format:
+    JSON object format:
     {
-      "type": "radio" | "checkbox" | "text" | "multiple_choice" | "scale_matrix",
+      "type": "radio" | "checkbox" | "text" | "multiple_choice" | "linear_scale" | "scale_matrix",
       "question": str,
-      "options": List[str],           # optional, depending on type
+      "options": List[str],           # for radio, checkbox, multiple_choice
       "required": bool,
-      "context": str,                 # e.g., scale explanations, instructions
-      "confidence": float,           # range: 0.0-1.0
-      "allow_custom_option": bool,   # optional, default is false
+      "context": str,                 # e.g. scale explanations, helper text
+      "confidence": float,           # from 0.0 to 1.0
+      "allow_custom_option": bool,   # if "Other: ___" is present
       "rows": List[str],             # only for scale_matrix
-      "scale": List[str]             # only for scale_matrix
+      "scale": List[str]             # for linear_scale and scale_matrix
     }
 
     Example:
     {
       "type": "scale_matrix",
       "question": "Rate the usefulness of the following recruitment methods from your perspective (scale 1-5)",
-      "rows": ["Applying via job portal", "Sourcing on LinkedIn", "Referrals from friends"],
+      "rows": ["Applying through job boards", "LinkedIn sourcing", "Referrals from friends"],
       "scale": ["1", "2", "3", "4", "5"],
       "required": true,
       "context": "1 - not useful, 5 - very effective",
