@@ -1,4 +1,4 @@
-from playwright.sync_api import Page, sync_playwright
+from playwright.sync_api import Page
 
 from utils.string_utils import sanitize_filename
 
@@ -8,7 +8,21 @@ INPUT_TEXT_SELECTOR = "input[type='text']"
 RADIO_SELECTOR = "div[role='radio']"
 
 
-def _extract_questions(page: Page) -> list[dict]:
+def extract_questions(page: Page) -> list[dict]:
+    """Extract questions from a public Google Form and saves screenshots of each question.
+
+    Parameters
+    ----------
+    page: Page
+        The Page of the public Google Form.
+
+    Returns
+    -------
+    list of dict
+        A list of dictionaries with question text and path to screenshot:
+        [{'question': str, 'img_path': str}, ...]
+
+    """
     question_elements = page.query_selector_all(LIST_ITEMS_SELECTOR)
     questions = []
     idx = 1
@@ -29,29 +43,60 @@ def _extract_questions(page: Page) -> list[dict]:
     return questions
 
 
-def extract_google_form(form_url: str) -> list[dict]:
-    """Extract questions from a public Google Form and saves screenshots of each question.
+def _normalize(text):
+    import re
 
-    Parameters
-    ----------
-    form_url : str
-        The URL of the public Google Form.
+    return re.sub(r"\s+", " ", text.strip().lower())
 
-    Returns
-    -------
-    list of dict
-        A list of dictionaries with question text and path to screenshot:
-        [{'question': str, 'img_path': str}, ...]
 
-    """
-    with sync_playwright() as sp:
+def _fill_radio_question(page: Page, question_data: dict):
+    question_text = _normalize(question_data["question"])
+    answer_text = _normalize(question_data["answer"])
+
+    question_blocks = page.locator(LIST_ITEMS_SELECTOR).all()
+
+    for block in question_blocks:
         try:
-            browser = sp.chromium.launch(headless=True)
-            page = browser.new_page()
-            page.goto(form_url, timeout=60000)
-            page.wait_for_selector(LIST_ITEMS_SELECTOR, timeout=10000)
+            block_text = block.inner_text(timeout=1000)
+        except Exception:
+            continue
 
-            questions = _extract_questions(page)
-        finally:
-            browser.close()
-        return questions
+        if question_text in _normalize(block_text):
+            matching_element = None
+            for el in block.locator("*").all():
+                try:
+                    text = el.inner_text(timeout=500)
+                    if _normalize(text) == answer_text:
+                        matching_element = el
+                        break
+                except Exception:
+                    continue
+
+            if matching_element:
+                matching_element.click(force=True)
+                return
+
+    err_msg = f"No match for radio answer '{answer_text}' in question '{question_text}'"
+    raise ValueError(err_msg)
+
+
+def fill_text_question(page: Page, question_data: dict):
+    question_text = question_data["question"]
+    answer_text = question_data["answer"]
+
+    question_el = page.locator(f"text={question_text}").first
+    question_el.wait_for(state="visible", timeout=5000)
+
+    # Znajdź najbliższe pole tekstowe (input or textarea)
+    input_el = question_el.locator("input, textarea").first
+    input_el.fill(answer_text)
+
+
+def fill_question(page: Page, question_data: dict):
+    qtype = question_data["type"]
+    if qtype == "radio":
+        _fill_radio_question(page, question_data)
+    elif qtype == "text":
+        fill_text_question(page, question_data)
+    else:
+        raise NotImplementedError(f"Unsupported question type: {qtype}")

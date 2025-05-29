@@ -17,7 +17,11 @@ form_response_task:
     Biografia: {bio}
   expected_output: |
     Zwięzła, konkretna i naturalnie brzmiąca odpowiedź, która odzwierciedla biografię i styl osoby aplikującej.
-    Dla typowych pytań otwartych - maksymalnie 2-3 zdania. Dla pytań zamkniętych (tak/nie, płeć, itp.) - jedno słowo lub bardzo krótka fraza.
+    Dla typowych pytań otwartych - maksymalnie 2-3 zdania.
+    Dla pytań zamkniętych (tak/nie, płeć, itp.) - jedno słowo lub bardzo krótka fraza.
+    Dla pytań typu "scale_matrix" (siatka ocen):
+      Odpowiedz osobno dla każdego wiersza z `rows`, wybierając wartość ze skali `scale`.
+      Odpowiedź powinna być w formie słownika: {"<row>": "<value>", ...}
 
 bio_generator_agent:
   role: Generator życiorysów specjalistów IT
