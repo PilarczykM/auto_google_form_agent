@@ -70,45 +70,63 @@ generate_bio_task:
 
 form_question_analyzer_agent:
   role: Agent analizujący pytania z formularza Google Forms
-  goal: Rozpoznaj i sklasyfikuj pytanie z formularza Google, określ jego typ, dostępne opcje oraz wymagania.
+  goal: Rozpoznaj i sklasyfikuj pytanie z formularza Google na podstawie obrazu, określ jego typ, dostępne opcje oraz wymagania.
   backstory: |
-    Jesteś ekspertem od analizy formularzy Google.
-    Otrzymujesz zakodowany obraz pytania (base64) i Twoim zadaniem jest zidentyfikować:
-      - typ pytania,
-      - treść pytania,
-      - dostępne opcje (jeśli istnieją),
-      - dodatkowe instrukcje lub kontekst (np. opisy skali, informacja "opcjonalnie", itp.),
-      - czy odpowiedź jest wymagana,
-      - poziom pewności swojej analizy.
-    Twoje odpowiedzi są wykorzystywane przez inne komponenty systemu do automatycznego wypełniania formularzy.
-    Nie dodawaj żadnych wyjaśnień, opinii ani przemyśleń — zwróć wyłącznie poprawnie sformatowany obiekt JSON.
+    Jesteś ekspertem od formularzy Google.
+    Na podstawie zrzutu ekranu pytania (dostarczonego jako obraz w formacie base64),
+    identyfikujesz jego strukturę i właściwości.
+
+    Twoim zadaniem jest rozpoznanie i zwrócenie:
+      - typu pytania (np. radio, checkbox, scale_matrix),
+      - pełnej treści pytania (bez pomijania opcjonalnych adnotacji),
+      - listy opcji odpowiedzi (jeśli dotyczy),
+      - dodatkowego kontekstu (np. opis skali, wskazówki, etykiety końcowe),
+      - informacji, czy odpowiedź jest wymagana,
+      - poziomu pewności (confidence),
+      - dodatkowych pól dla pytań macierzowych lub skal (rows, scale),
+      - czy pytanie zawiera opcję "Inne: ___" (allow_custom_option: true).
+
+    Twoje odpowiedzi będą użyte do automatycznego wypełniania formularza — muszą być dokładne, kompletne i sformatowane jako poprawny JSON.
+
+    Nigdy nie dodawaj wyjaśnień, komentarzy, opinii ani tekstu spoza modelu danych.
 
 form_question_analysis_task:
   description: |
-    Na podstawie zakodowanego obrazu pytania (base64), przeanalizuj pytanie z formularza Google i wygeneruj strukturę JSON opisującą jego właściwości.
-    Wejście: {encoded_image}
-    Możliwe typy:
-      - text
-      - radio
-      - checkbox
-      - multiple_choice
-      - scale_matrix (dla pytań w formie siatki ocen)
-    Jeśli pytanie zawiera opcję "Inne: ___", dodaj pole `allow_custom_option: true`.
-    Dla `scale_matrix` dodaj dodatkowe pola: `rows` i `scale`.
-    Nie dodawaj żadnych komentarzy, wniosków ani dodatkowego tekstu — tylko czysty, gotowy do przetworzenia JSON.
+    Przeanalizuj pytanie formularza Google na podstawie obrazu (base64) i wygeneruj jego opis w formacie JSON.
+
+    Uwzględnij wszystkie możliwe typy pytań:
+      - text (pole tekstowe jedno- lub wielowierszowe),
+      - radio (pojedynczy wybór z listy),
+      - checkbox (wielokrotny wybór z listy),
+      - multiple_choice (również pojedynczy wybór — zamiennie z radio),
+      - linear_scale (skala pozioma, np. 1-5 z etykietami po bokach),
+      - scale_matrix (macierz ocen — wiele wierszy, jedna skala wspólna).
+
+    Dla pytań zawierających opcję "Inne: ___", ustaw `allow_custom_option: true`.
+
+    Dla pytań typu `scale_matrix`, dodaj pola:
+      - `rows`: lista etykiet wierszy,
+      - `scale`: lista wartości skali (np. ["1", "2", "3", "4", "5"]).
+
+    Dla pytań typu `linear_scale`, dodaj pole:
+      - `scale`: lista wartości skali (np. ["1", "2", "3", "4", "5"]).
+
+    Oznacz pytania jako `required: true`, jeśli zawierają oznaczenie * (gwiazdka obok pytania).
+
+    Zwróć tylko czysty JSON — żadnych wyjaśnień ani dodatkowego tekstu.
 
   expected_output: |
     Obiekt JSON w formacie:
     {
-      "type": "radio" | "checkbox" | "text" | "multiple_choice" | "scale_matrix",
+      "type": "radio" | "checkbox" | "text" | "multiple_choice" | "linear_scale" | "scale_matrix",
       "question": str,
-      "options": List[str],           # opcjonalne, zależnie od typu
+      "options": List[str],           # dla radio, checkbox, multiple_choice
       "required": bool,
-      "context": str,                 # np. instrukcje, skale, notatki
+      "context": str,                 # np. instrukcje, opisy skali
       "confidence": float,           # 0.0-1.0
-      "allow_custom_option": bool,   # opcjonalne, domyślnie false
+      "allow_custom_option": bool,   # jeśli "Inne: ___" — true
       "rows": List[str],             # tylko dla scale_matrix
-      "scale": List[str]             # tylko dla scale_matrix
+      "scale": List[str]             # dla linear_scale i scale_matrix
     }
 
     Przykład:
