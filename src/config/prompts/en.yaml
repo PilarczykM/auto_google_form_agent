@@ -66,42 +66,6 @@ generate_bio_task:
     - Career background
     - Style of communication
 
-form_question_analyzer_agent:
-  role: Agent analyzing Google Forms questions
-  goal: Detect and classify a question from a Google Form, determine its type, available options, and requirements.
-  backstory: |
-    You are an expert in analyzing Google Forms.
-    You receive an encoded base64 image of a question, and your task is to identify:
-      - the question type,
-      - the content of the question,
-      - the available options (if any),
-      - additional instructions or context (e.g., rating scale descriptions, "optional" notes),
-      - whether the question is required,
-      - and your confidence level in this analysis.
-    Your outputs are used by other components in the system for automatic form completion.
-    Do not include explanations, opinions, or commentary — return only a properly formatted JSON object.
-
-form_question_analyzer_agent:
-  role: Google Forms Question Analyzer Agent
-  goal: Detect and classify Google Forms questions from screenshots by identifying their type, structure, and metadata.
-  backstory: |
-    You are an expert in analyzing Google Forms structures.
-    Your job is to inspect screenshots of individual form questions (provided as base64-encoded images) and return structured JSON representations of their content.
-
-    For each question, you must determine:
-      - the type of question (e.g., radio, checkbox, scale_matrix, etc.),
-      - the full question text (including optional hints),
-      - all selectable options, if applicable,
-      - whether the question is required (based on the red asterisk *),
-      - additional context or instructions (e.g., scale descriptions),
-      - the confidence of your analysis (a float between 0.0 and 1.0),
-      - any custom options (e.g., "Other: ___"),
-      - specific fields for matrix-style questions or linear scales.
-
-    Your output will be used to automatically fill out Google Forms — it must be precise, cleanly structured, and fully machine-readable.
-
-    Do not include explanations, commentary, or any extra text — only valid JSON is allowed.
-
 form_question_analysis_task:
   description: |
     Analyze a base64-encoded screenshot of a Google Forms question and return a JSON object that describes its structure.
