@@ -1,12 +1,17 @@
 import click
+from dotenv import load_dotenv
+from langchain_openai import ChatOpenAI
 from playwright.sync_api import sync_playwright
 
-from agents.google_form_crew import create_bio_generator_crew, create_form_crew, create_form_question_analyzer_crew
-from parsers.google_form_parser import LIST_ITEMS_SELECTOR, extract_questions, fill_question
+from agents.google_form_crew import create_bio_generator_crew, create_form_crew
+from agents.tools.vision_question_analyzer import form_question_vision_analyzer_tool
+from parsers.google_form_parser import LIST_ITEMS_SELECTOR, extract_questions, fill_question, submit_form
 from utils.fs_utils import reset_screenshot_dir
-from utils.image_utils import encode_image_to_base64
 from utils.json_utils import str_to_json
 from utils.print_styles import print_header, print_success
+from utils.yaml_utils import load_prompts
+
+load_dotenv()
 
 
 @click.command()
@@ -36,6 +41,8 @@ def main(lang, form_url, enforce_quality_check):
 
     reset_screenshot_dir()
 
+    llm = ChatOpenAI(model="gpt-4o-mini")
+
     with sync_playwright() as sp:
         try:
             browser = sp.chromium.launch(headless=False)
@@ -44,104 +51,28 @@ def main(lang, form_url, enforce_quality_check):
             page.wait_for_selector(LIST_ITEMS_SELECTOR, timeout=10000)
 
             questions = extract_questions(page)
-
-            crew = create_form_question_analyzer_crew(lang)
             results = []
-            for question in questions:
-                result = crew.kickoff(inputs={"encoded_image": encode_image_to_base64(question["img_path"])})
-                results.append(str(result))
+            prompts = load_prompts(lang)
+            description = prompts["form_question_analysis_task"]["description"]
+            expected_output = prompts["form_question_analysis_task"]["expected_output"]
 
-            crew = create_bio_generator_crew(lang)
+            for question in questions:
+                result = form_question_vision_analyzer_tool(
+                    description=description, expected_output=expected_output, image_path=str(question["img_path"])
+                )
+                results.append(result)
+
+            crew = create_bio_generator_crew(lang, llm)
             bio = crew.kickoff()
 
-            # Loop through questions and add answer as result.
-            # question = """
-            # {
-            #     "type": "radio",
-            #     "question": "Płeć",
-            #     "options": ["Kobieta", "Mężczyzna", "Nie chcę podawać"],
-            #     "required": true,
-            #     "context": "",
-            #     "answer" : "Kobieta",
-            #     "confidence": 0.99
-            # }
-            # """
-            # question = """
-            # {
-            #     "type": "text",
-            #     "question": "Jakie jedno usprawnienie najbardziej poprawiłoby Twój komfort udziału w rekrutacjach?",
-            #     "required": true,
-            #     "context": "",
-            #     "answer" : "Brak",
-            #     "confidence": 0.99
-            # }
-            # """
+            crew = create_form_crew(lang, llm)
+            for result in results:
+                question = str_to_json(result, strip_tags=["thinking", "processing"])
+                answer = crew.kickoff(inputs={"question": question, "bio": str(bio)})
+                question["answer"] = str(answer)
+                fill_question(page, question)
 
-            #             question = """
-            # {
-            #   "type": "checkbox",
-            #   "question": "Z jakich portali/źródeł najczęściej korzystasz przy poszukiwaniu pracy?",
-            #   "options": [
-            #     "LinkedIn",
-            #     "JustJoin.IT",
-            #     "NoFluff.Jobs",
-            #     "Pracuj.pl",
-            #     "Bezpośredni kontakt do rekrutera",
-            #     "Discord/ Facebook"
-            #   ],
-            #   "required": true,
-            #   "context": "",
-            #   "confidence": 0.98,
-            #   "allow_custom_option": true,
-            #   "answer": ["LinkedIn", "Bezpośredni kontakt do rekrutera"]
-            # }
-            # """
-            #             question = """
-            # {
-            #   "type": "scale_matrix",
-            #   "question": "Oceń przydatność poniższych metod rekrutacji z Twojej perspektywy (skala 1-5).",
-            #   "rows": [
-            #     "Aplikowanie przez portal ogłoszeniowy",
-            #     "Sourcing na LinkedIn",
-            #     "Polecenia znajomych",
-            #     "Hackhatony i meetupy",
-            #     "Rekrutacje wewnętrzne",
-            #     "Bezpośredni kontakt z rekruterem"
-            #   ],
-            #   "scale": ["1", "2", "3", "4", "5"],
-            #   "required": true,
-            #   "context": "1 - brak znajomości, 5 - ekspert",
-            #   "confidence": 0.97,
-            #   "answer": {
-            #     "Aplikowanie przez portal ogłoszeniowy": "5",
-            #     "Sourcing na LinkedIn": "4",
-            #     "Polecenia znajomych": "4",
-            #     "Hackhatony i meetupy": "1",
-            #     "Rekrutacje wewnętrzne": "2",
-            #     "Bezpośredni kontakt z rekruterem": "4"
-            #   }
-            # }
-            # """
-
-            question = """
-            {
-            "type": "linear_scale",
-            "question": "Jak oceniasz jakość komunikacji z rekruterami w ostatnich procesach, 
-            w których brałeś/aś udział?",
-            "scale": ["1", "2", "3", "4", "5"],
-            "required": true,
-            "context": "1 - nieskuteczne, 5 - bardzo skuteczne",
-            "confidence": 0.97,
-            "answer": "4"
-            }
-            """
-
-            question = str_to_json(question, strip_tags=["thinking", "processing"])
-            crew = create_form_crew(lang)
-            result = crew.kickoff(inputs={"question": question, "bio": str(bio)})
-            question["answer"] = str(result)
-
-            fill_question(page, question)
+            submit_form()
         finally:
             browser.close()
 

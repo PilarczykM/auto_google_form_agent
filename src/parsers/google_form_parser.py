@@ -1,5 +1,6 @@
 from playwright.sync_api import Page
 
+from config.project_paths import ROOT_DIRECTORY
 from utils.string_utils import sanitize_filename, str_to_parsed_type
 
 LIST_ITEMS_SELECTOR = 'div[role="listitem"]'
@@ -33,7 +34,7 @@ def extract_questions(page: Page) -> list[dict]:
 
         question_text = heading.inner_text().strip()
         sanitized = sanitize_filename(question_text)
-        img_path = f"screenshots/{idx}_{sanitized}.png"
+        img_path = ROOT_DIRECTORY / f"screenshots/{idx}_{sanitized}.png"
         el.screenshot(path=img_path)
 
         questions.append({"question": question_text, "img_path": img_path})
@@ -221,3 +222,19 @@ def fill_question(page: Page, question_data: dict):
         _fill_linear_scale_question(page, question_data)
     else:
         raise NotImplementedError(f"Unsupported question type: {qtype}")
+
+
+def submit_form(page: Page):
+    """Submit a form by clicking the submit button on the given page.
+
+    The function locates the submit button using the `aria-label="Submit"` attribute
+    and triggers a click event to submit the form.
+
+    Parameters
+    ----------
+    page : Page
+        The page object representing the current browser page or context.
+
+    """
+    submit_button = page.locator('[aria-label="Submit"]')
+    submit_button.click()
