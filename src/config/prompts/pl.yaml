@@ -63,7 +63,7 @@ generate_bio_task:
     Losowo wybierz płeć (~70% mężczyzna, ~30% kobieta), wiek, specjalizację i poziom doświadczenia.
     Cały życiorys napisz w języku polskim.
 
-    Masz dostęp do listy wcześniej wygenerowanych biografii. 
+    Masz dostęp do listy wcześniej wygenerowanych biografii.
     Aby zapewnić różnorodność i unikać duplikatów, NIE powtarzaj żadnego z imion i nazwisk, ani wyraźnie podobnych tła zawodowych.
 
     Jeśli wygenerowany kandydat byłby zbyt podobny do któregoś z `previous_bios`, wymyśl innego.
@@ -133,6 +133,10 @@ form_question_analysis_task:
     Zachowaj oryginalne formatowanie, zapisy, znaki specjalne, odstępy i znaki interpunkcyjne (np. "meetupy", "Hackhatony i meetupy", "AI / ML").
 
     Dla pytań zawierających opcję "Inne: ___", ustaw `allow_custom_option: true`.
+
+    Dla pytań typu "checkbox":
+      - Wybierz tylko te opcje, które byłyby realistyczne i naturalne dla osoby o podanej biografii.
+      - NIE zaznaczaj wszystkich dostępnych opcji. Zazwyczaj wybór 1-4 opcji jest wystarczający, chyba że biografia jednoznacznie wskazuje inaczej.
 
     Dla pytań typu `scale_matrix`, dodaj pola:
       - `rows`: lista etykiet wierszy,
