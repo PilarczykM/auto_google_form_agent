@@ -9,6 +9,19 @@ form_agent:
     Twoje odpowiedzi powinny być konkretne, techniczne i zwięzłe - zgodne z Twoim stylem i doświadczeniem.
     Unikaj lania wody. Pisz krótko, rzeczowo i na temat. Jeśli pytanie dotyczy wyboru (np. płci, lokalizacji), odpowiadaj jednym słowem lub bardzo krótko.
 
+# form_response_task:
+#   description: |
+#     Odpowiedz na poniższe pytanie formularza jako specjalista opisany w biografii.
+#     Język: polski
+#     Pytanie: {question}
+#     Biografia: {bio}
+#   expected_output: |
+#     Zwięzła, konkretna i naturalnie brzmiąca odpowiedź, która odzwierciedla biografię i styl osoby aplikującej.
+#     Dla typowych pytań otwartych - maksymalnie 2-3 zdania.
+#     Dla pytań zamkniętych (tak/nie, płeć, itp.) - jedno słowo lub bardzo krótka fraza.
+#     Dla pytań typu "scale_matrix" (siatka ocen):
+#       Odpowiedz osobno dla każdego wiersza z `rows`, wybierając wartość ze skali `scale`.
+#       Odpowiedź powinna być w formie słownika: {"<row>": "<value>", ...}
 form_response_task:
   description: |
     Odpowiedz na poniższe pytanie formularza jako specjalista opisany w biografii.
@@ -16,12 +29,18 @@ form_response_task:
     Pytanie: {question}
     Biografia: {bio}
   expected_output: |
-    Zwięzła, konkretna i naturalnie brzmiąca odpowiedź, która odzwierciedla biografię i styl osoby aplikującej.
-    Dla typowych pytań otwartych - maksymalnie 2-3 zdania.
-    Dla pytań zamkniętych (tak/nie, płeć, itp.) - jedno słowo lub bardzo krótka fraza.
-    Dla pytań typu "scale_matrix" (siatka ocen):
-      Odpowiedz osobno dla każdego wiersza z `rows`, wybierając wartość ze skali `scale`.
-      Odpowiedź powinna być w formie słownika: {"<row>": "<value>", ...}
+    Odpowiedź powinna być zgodna ze stylem i osobowością wynikającą z biografii, ale format odpowiedzi musi być **zgodny ze strukturą wymaganą przez typ pytania**, według modelu danych form_question_analyzer_agent.
+
+    Dokładne zasady:
+    - "text" — krótka odpowiedź tekstowa (maks. 2-3 zdania).
+    - "radio" lub "multiple_choice" — pojedyncza wybrana opcja jako string.
+    - "checkbox" — lista wybranych opcji, np.: ["LinkedIn", "NoFluff.Jobs"].
+    - "linear_scale" — pojedyncza wartość z podanej skali (np. "4").
+    - "scale_matrix" — słownik {"<row>": "<value>"}, np.: {"Aplikowanie przez portal ogłoszeniowy": "4", ...}.
+
+    **WAŻNE:** słownik musi zawierać odpowiedzi dla **WSZYSTKICH** wierszy (`rows`) podanych w pytaniu. Nie pomijaj żadnego wiersza.
+
+    Nie dodawaj żadnych dodatkowych opisów, komentarzy ani narracji poza wymaganym formatem odpowiedzi.
 
 bio_generator_agent:
   role: Generator życiorysów specjalistów IT

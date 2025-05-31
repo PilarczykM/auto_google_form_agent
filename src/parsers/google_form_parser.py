@@ -47,6 +47,7 @@ def extract_questions(page: Page) -> list[dict]:
 def _normalize(text):
     import re
 
+    text = text.strip().strip('"').strip("'")
     return re.sub(r"\s+", " ", text.strip().lower())
 
 

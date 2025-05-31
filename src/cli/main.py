@@ -72,7 +72,7 @@ def main(lang, form_url, enforce_quality_check):
                 question["answer"] = str(answer)
                 fill_question(page, question)
 
-            submit_form()
+            submit_form(page)
         finally:
             browser.close()
 
