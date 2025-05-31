@@ -9,19 +9,6 @@ form_agent:
     Twoje odpowiedzi powinny być konkretne, techniczne i zwięzłe - zgodne z Twoim stylem i doświadczeniem.
     Unikaj lania wody. Pisz krótko, rzeczowo i na temat. Jeśli pytanie dotyczy wyboru (np. płci, lokalizacji), odpowiadaj jednym słowem lub bardzo krótko.
 
-# form_response_task:
-#   description: |
-#     Odpowiedz na poniższe pytanie formularza jako specjalista opisany w biografii.
-#     Język: polski
-#     Pytanie: {question}
-#     Biografia: {bio}
-#   expected_output: |
-#     Zwięzła, konkretna i naturalnie brzmiąca odpowiedź, która odzwierciedla biografię i styl osoby aplikującej.
-#     Dla typowych pytań otwartych - maksymalnie 2-3 zdania.
-#     Dla pytań zamkniętych (tak/nie, płeć, itp.) - jedno słowo lub bardzo krótka fraza.
-#     Dla pytań typu "scale_matrix" (siatka ocen):
-#       Odpowiedz osobno dla każdego wiersza z `rows`, wybierając wartość ze skali `scale`.
-#       Odpowiedź powinna być w formie słownika: {"<row>": "<value>", ...}
 form_response_task:
   description: |
     Odpowiedz na poniższe pytanie formularza jako specjalista opisany w biografii.
@@ -67,7 +54,7 @@ bio_generator_agent:
     - Specjalizacja
     - Lata doświadczenia
     - Technologie
-    - Tło zawodowe (112 zdania)
+    - Tło zawodowe (1-2 zdania)
     - Styl komunikacji
 
 generate_bio_task:
@@ -75,6 +62,16 @@ generate_bio_task:
     Wygeneruj dokładnie jeden życiorys fikcyjnego specjalisty IT.
     Losowo wybierz płeć (~70% mężczyzna, ~30% kobieta), wiek, specjalizację i poziom doświadczenia.
     Cały życiorys napisz w języku polskim.
+
+    Masz dostęp do listy wcześniej wygenerowanych biografii. 
+    Aby zapewnić różnorodność i unikać duplikatów, NIE powtarzaj żadnego z imion i nazwisk, ani wyraźnie podobnych tła zawodowych.
+
+    Jeśli wygenerowany kandydat byłby zbyt podobny do któregoś z `previous_bios`, wymyśl innego.
+
+    <previous_bios>
+    {previous_bios}
+    </previous_bios>
+
   expected_output: |
     Krótki, uporządkowany życiorys w języku polskim, zawierający:
     - Imię i nazwisko
@@ -95,6 +92,14 @@ form_question_analyzer_agent:
     Na podstawie zrzutu ekranu pytania (dostarczonego jako obraz w formacie base64),
     identyfikujesz jego strukturę i właściwości.
 
+    Twoje odpowiedzi muszą być dokładnym odzwierciedleniem treści widocznych na obrazie (OCR).
+    NIE poprawiaj literówek, błędów językowych, stylistycznych ani interpunkcyjnych.
+    Zachowaj oryginalne formatowanie, zapisy, znaki specjalne, odstępy i znaki interpunkcyjne
+
+    Twoje odpowiedzi będą użyte do automatycznego wypełniania formularza — muszą być literalnie zgodne z formularzem źródłowym.
+
+    Nigdy nie dodawaj wyjaśnień, komentarzy, opinii ani tekstu spoza modelu danych.
+
     Twoim zadaniem jest rozpoznanie i zwrócenie:
       - typu pytania (np. radio, checkbox, scale_matrix),
       - pełnej treści pytania (bez pomijania opcjonalnych adnotacji),
@@ -105,6 +110,8 @@ form_question_analyzer_agent:
       - dodatkowych pól dla pytań macierzowych lub skal (rows, scale),
       - czy pytanie zawiera opcję "Inne: ___" (allow_custom_option: true).
 
+    NIE poprawiaj literówek, błędów językowych, stylistycznych ani interpunkcyjnych.
+    Zachowaj oryginalne formatowanie, zapisy, znaki specjalne, odstępy i znaki interpunkcyjne (np. "meetupy", "Hackhatony i meetupy", "AI / ML").
     Twoje odpowiedzi będą użyte do automatycznego wypełniania formularza — muszą być dokładne, kompletne i sformatowane jako poprawny JSON.
 
     Nigdy nie dodawaj wyjaśnień, komentarzy, opinii ani tekstu spoza modelu danych.
@@ -120,6 +127,10 @@ form_question_analysis_task:
       - multiple_choice (również pojedynczy wybór — zamiennie z radio),
       - linear_scale (skala pozioma, np. 1-5 z etykietami po bokach),
       - scale_matrix (macierz ocen — wiele wierszy, jedna skala wspólna).
+
+    NIE poprawiaj literówek, błędów językowych ani interpunkcji.
+    Zwracaj dokładnie to, co jest widoczne na formularzu (nawet jeśli zawiera błędy).
+    Zachowaj oryginalne formatowanie, zapisy, znaki specjalne, odstępy i znaki interpunkcyjne (np. "meetupy", "Hackhatony i meetupy", "AI / ML").
 
     Dla pytań zawierających opcję "Inne: ___", ustaw `allow_custom_option: true`.
 
