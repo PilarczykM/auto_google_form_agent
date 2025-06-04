@@ -11,7 +11,6 @@ from agents.tools.vision_question_analyzer import form_question_vision_analyzer_
 from parsers.google_form_parser import LIST_ITEMS_SELECTOR, extract_questions, fill_question, submit_form
 from utils.fs_utils import reset_screenshot_dir
 from utils.json_utils import str_to_json
-from utils.print_styles import print_header, print_success
 from utils.yaml_utils import load_prompts
 
 load_dotenv()
