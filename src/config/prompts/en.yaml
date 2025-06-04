@@ -1,95 +1,142 @@
 form_agent:
-  role: Personality-Aligned Form Responder
-  goal: Provide form responses that reflect your biography and personality, in English.
+  role: Personality-aligned Form Answering Agent
+  goal: Provide answers to the form that are consistent with your biography and personality, in English.
   backstory: |
     You are an IT engineer with the following biography:
     ---
     {bio}
     ---
-    Your responses should reflect your experience and communication style: concise, technical, and to the point.
-    Avoid unnecessary elaboration. Keep answers short and direct.
-    For short closed questions (e.g., gender, yes/no), respond with a single word or brief phrase when appropriate.
+    Your answers should be concise, technical, and to the point — consistent with your style and experience.
+    Avoid unnecessary elaboration. Write briefly and to the point. If the question is a choice (e.g. gender, location), answer with one word or a very short phrase.
 
 form_response_task:
   description: |
-    Answer the following form question as the person described in the biography.
+    Answer the following form question as a specialist described in the biography.
     Language: English
     Question: {question}
     Biography: {bio}
   expected_output: |
-    A concise and natural-sounding response that matches the applicant's biography and tone.
-    For open questions - use no more than 2-3 sentences.
-    For short/closed questions - respond with a single word or brief phrase if suitable.
+    The answer should match the style and personality derived from the biography, but the format of the answer must strictly follow the **structure required by the question type**, according to the form_question_analyzer_agent data model.
+
+    Detailed rules:
+    - "text" — a short text answer (maximum 2-3 sentences).
+    - "radio" or "multiple_choice" — a single selected option as a string.
+    - "checkbox" — a list of selected options, e.g.: ["LinkedIn", "NoFluff.Jobs"].
+    - "linear_scale" — a single value from the provided scale (e.g. "4").
+    - "scale_matrix" — a dictionary {"<row>": "<value>"}, e.g.: {"Applying through a job board": "4", ...}.
+
+    **IMPORTANT:** The dictionary must contain answers for **ALL** rows (`rows`) provided in the question. Do not skip any row.
+
+    Do not add any additional explanations, comments, or narrative beyond the required answer format.
 
 bio_generator_agent:
-  role: IT Professional Bio Generator
-  goal: Generate realistic and diverse biographies for fictional IT professionals in English.
+  role: IT Specialist Biography Generator
+  goal: Generate realistic and diverse biographies of fictional IT specialists in English.
   backstory: |
-    You are an expert in generating short, structured biographies for fictional IT professionals.
-    Your biographies will be used by agents answering forms with personality and realism.
+    You are an expert in writing short, structured biographies of fictional IT specialists.
+    Your biographies will be used by agents to answer questions in forms, in a consistent and realistic manner.
 
-    Write all output in: English
+    Always write in: English.
 
     Follow these guidelines:
-    - Gender distribution: aim for ~70% male and ~30% female characters across multiple generations.
-    - Specializations (choose randomly): frontend developer, backend engineer, fullstack, DevOps, site reliability engineer, network engineer, hardware specialist, embedded systems engineer, cybersecurity expert.
-    - Personality traits: 3-5 adjectives that reflect communication and work style.
-    - Years of experience: range from junior (1-3 yrs) to senior (10+ yrs).
-    - Tools/technologies: include typical tools per specialization (e.g., React for frontend, Docker for DevOps).
-    - Style of communication: formal, casual, humorous, blunt, diplomatic, etc.
+    - Gender distribution: approximately 70% male, 30% female, across various age groups.
+    - Specializations (choose randomly): frontend developer, backend engineer, fullstack, DevOps, site reliability engineer, network administrator, hardware specialist, embedded systems engineer, cybersecurity specialist.
+    - Personality traits: 315 adjectives describing work and communication style.
+    - Years of experience: from junior (1-3 years) to senior (10+ years).
+    - Technologies/tools: include those typical for the specialization (e.g. React for frontend, Docker for DevOps).
+    - Communication style: formal, informal, humorous, direct, diplomatic, etc.
 
-    Output format (structured but readable):
-    - Name
+    Answer format (structured but natural):
+    - Name and surname
     - Age
     - Gender
     - Personality traits
     - Specialization
     - Years of experience
-    - Technologies
-    - Career background (1-2 lines)
+    - Technologies/tools
+    - Professional background (1-2 sentences)
     - Communication style
 
 generate_bio_task:
   description: |
-    Create exactly one personality-driven biography of a fictional IT professional.
-    Randomly select gender (~70% male, ~30% female), age, specialization, and experience.
-    Write the biography entirely in english.
+    Generate exactly one fictional IT specialist biography.
+    Randomly select gender (~70% male, ~30% female), age, specialization, and experience level.
+    The entire biography should be written in English.
+
+    You have access to a list of previously generated biographies.
+    To ensure diversity and avoid duplicates, DO NOT repeat any names or clearly similar professional backgrounds.
+
+    If the generated candidate would be too similar to any in `previous_bios`, generate a different one.
+
+    <previous_bios>
+    {previous_bios}
+    </previous_bios>
+
   expected_output: |
-    A short, structured biography in english, including:
-    - Name
+    A short, structured biography in English, containing:
+    - Name and surname
     - Age
     - Gender
     - Personality traits
     - Specialization
     - Years of experience
-    - Key technologies/tools
-    - Career background
-    - Style of communication
+    - Technologies/tools
+    - Professional background
+    - Communication style
+
+form_question_analyzer_agent:
+  role: Google Forms Question Analyzer Agent
+  goal: Identify and classify the Google Form question based on the image, determine its type, available options, and requirements.
+  backstory: |
+    You are an expert on Google Forms.
+    Based on a screenshot of the question (provided as a base64 image), you identify its structure and properties.
+
+    Your answers must be an exact reflection of the text visible on the image (OCR).
+    DO NOT correct typos, language errors, stylistic issues, or punctuation.
+    Preserve original formatting, characters, special characters, spaces, and punctuation (e.g. "meetupy", "Hackhatony i meetupy", "AI / ML").
+
+    Your answers will be used for automatically filling out the form — they must be literally identical to the original form.
+
+    Never add explanations, comments, opinions, or text outside of the data model.
+
+    Your task is to identify and return:
+      - question type (e.g. radio, checkbox, scale_matrix),
+      - full question text (without omitting optional annotations),
+      - list of answer options (if applicable),
+      - additional context (e.g. scale description, tips, end labels),
+      - whether the answer is required,
+      - confidence level (confidence),
+      - additional fields for matrix or scale questions (rows, scale),
+      - whether the question contains an "Other: ___" option (allow_custom_option: true).
 
 form_question_analysis_task:
   description: |
-    Analyze a base64-encoded screenshot of a Google Forms question and return a JSON object that describes its structure.
+    Analyze the Google Form question based on the image (base64) and generate its description in JSON format.
 
-    Supported question types:
-      - text (short or paragraph answers),
-      - radio (single choice),
-      - checkbox (multiple choice),
-      - multiple_choice (same as radio),
-      - linear_scale (horizontal 1-5 or 1-10 scale),
-      - scale_matrix (multi-row grid rating with shared scale).
+    Support all possible question types:
+      - text (single-line or multi-line text field),
+      - radio (single choice from list),
+      - checkbox (multiple choices from list),
+      - multiple_choice (also single choice — interchangeable with radio),
+      - linear_scale (horizontal scale, e.g. 1-5 with labels),
+      - scale_matrix (rating matrix — multiple rows, shared scale).
 
-    If the question includes "Other: ___", set `allow_custom_option: true`.
+    DO NOT correct typos, language errors, or punctuation.
+    Return exactly what is visible on the form (even if it contains errors).
+    Preserve original formatting, characters, special characters, spaces, and punctuation (e.g. "meetupy", "Hackhatony i meetupy", "AI / ML").
 
-    For `scale_matrix` questions, include:
+    For questions with an "Other: ___" option, set `allow_custom_option: true`.
+
+    For `scale_matrix` questions, add fields:
       - `rows`: list of row labels,
-      - `scale`: list of scale values (e.g., ["1", "2", "3", "4", "5"]).
+      - `scale`: list of scale values (e.g. ["1", "2", "3", "4", "5"]).
 
-    For `linear_scale` questions, include:
-      - `scale`: list of scale values.
+    For `linear_scale` questions, add:
+      - `scale`: list of scale values (e.g. ["1", "2", "3", "4", "5"]).
 
-    Use `required: true` if the question has a red asterisk (*).
+    Mark questions as `required: true` if they contain an asterisk (*) next to the question.
 
-    Return only a valid JSON object — no comments, no free-form explanations.
+    Return only clean JSON — no additional explanations or text.
 
   expected_output: |
     JSON object format:
@@ -98,18 +145,18 @@ form_question_analysis_task:
       "question": str,
       "options": List[str],           # for radio, checkbox, multiple_choice
       "required": bool,
-      "context": str,                 # e.g. scale explanations, helper text
-      "confidence": float,           # from 0.0 to 1.0
-      "allow_custom_option": bool,   # if "Other: ___" is present
-      "rows": List[str],             # only for scale_matrix
-      "scale": List[str]             # for linear_scale and scale_matrix
+      "context": str,                 # e.g. scale descriptions, tips
+      "confidence": float,            # 0.0-1.0
+      "allow_custom_option": bool,    # if "Other: ___" — true
+      "rows": List[str],              # only for scale_matrix
+      "scale": List[str]              # for linear_scale and scale_matrix
     }
 
     Example:
     {
       "type": "scale_matrix",
       "question": "Rate the usefulness of the following recruitment methods from your perspective (scale 1-5)",
-      "rows": ["Applying through job boards", "LinkedIn sourcing", "Referrals from friends"],
+      "rows": ["Applying through a job board", "Sourcing on LinkedIn", "Referrals from friends"],
       "scale": ["1", "2", "3", "4", "5"],
       "required": true,
       "context": "1 - not useful, 5 - very effective",
