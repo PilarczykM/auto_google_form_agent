@@ -23,7 +23,20 @@ def create_form_crew(language: str, llm=None) -> Crew:
         An instance of the `Crew` class containing the configured agent and task.
 
     """
-    prompts = load_prompts(language)
+    try:
+        prompts = load_prompts(language)
+    except FileNotFoundError as err:
+        err_msg = f"Prompt file not found for language: {language}"
+        raise RuntimeError(err_msg) from err
+    except Exception as err:
+        err_msg = f"Error while loading prompts: {err}"
+        raise RuntimeError(err_msg) from err
+
+    required_keys = ["form_agent", "form_response_task"]
+    for key in required_keys:
+        if key not in prompts:
+            err_msg = f"Missing key '{key}' in prompt file for language: {language}"
+            raise KeyError(err_msg)
 
     form_agent = Agent(
         role=prompts["form_agent"]["role"],
@@ -65,7 +78,20 @@ def create_bio_generator_crew(language: str, llm=None) -> Crew:
         responsible for generating a single, personality-rich IT biography.
 
     """
-    prompts = load_prompts(language)
+    try:
+        prompts = load_prompts(language)
+    except FileNotFoundError as err:
+        err_msg = f"Prompt file not found for language: {language}"
+        raise RuntimeError(err_msg) from err
+    except Exception as err:
+        err_msg = f"Error while loading prompts: {err}"
+        raise RuntimeError(err_msg) from err
+
+    required_keys = ["bio_generator_agent", "generate_bio_task"]
+    for key in required_keys:
+        if key not in prompts:
+            err_msg = f"Missing key '{key}' in prompt file for language: {language}"
+            raise KeyError(err_msg)
 
     bio_generator_agent = Agent(
         role=prompts["bio_generator_agent"]["role"],
